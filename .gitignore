@@ -4,3 +4,6 @@
 
 # Environment Variables
 .env
+
+# Frida specifications folder
+.frida-specs/**

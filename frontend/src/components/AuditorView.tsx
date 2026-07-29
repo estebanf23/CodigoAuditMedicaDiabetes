@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Eye, ShieldCheck, FileText, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Eye, ShieldCheck, FileText, CheckCircle2, AlertCircle, Maximize2, Minimize2 } from 'lucide-react';
 import { getPatients, getPatientDetail, auditPatient } from '../services/api';
 
 export const AuditorView = () => {
@@ -9,6 +9,8 @@ export const AuditorView = () => {
   const [selectedPatientId, setSelectedPatientId] = useState<number | null>(null);
   const [patientDetail, setPatientDetail] = useState<any>(null);
   const [auditorNotes, setAuditorNotes] = useState('');
+  const [isFullscreenAI, setIsFullscreenAI] = useState(false);
+  const [selectedAIFilter, setSelectedAIFilter] = useState<string>('');
 
   const fetchPatients = () => {
     getPatients(selectedFilter || undefined).then(setPatients);
@@ -63,16 +65,32 @@ export const AuditorView = () => {
         </div>
       </div>
 
-      <div className="flex gap-2 mb-4">
-        {['', 'PENDIENTE', 'RENOVACION_PENDIENTE', 'APROBADO', 'RECHAZADO'].map(f => (
-          <button
-            key={f}
-            onClick={() => setSelectedFilter(f)}
-            className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${selectedFilter === f ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-          >
-            {f === '' ? 'Todos' : (f === 'RENOVACION_PENDIENTE' ? 'RENOVACIÓN' : f)}
-          </button>
-        ))}
+      <div className="flex flex-col gap-3 mb-4">
+        <div className="flex gap-2 items-center flex-wrap">
+          <span className="text-sm font-semibold text-gray-600 mr-2">Estado:</span>
+          {['', 'PENDIENTE', 'RENOVACION_PENDIENTE', 'APROBADO', 'RECHAZADO'].map(f => (
+            <button
+              key={f}
+              onClick={() => setSelectedFilter(f)}
+              className={`px-4 py-1.5 text-sm font-medium rounded-full transition-colors ${selectedFilter === f ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+            >
+              {f === '' ? 'Todos' : (f === 'RENOVACION_PENDIENTE' ? 'RENOVACIÓN' : f)}
+            </button>
+          ))}
+        </div>
+        
+        <div className="flex gap-2 items-center flex-wrap">
+          <span className="text-sm font-semibold text-gray-600 mr-2">Filtro IA:</span>
+          {['', 'APROBABLE', 'APROBABLE CON OBSERVACIONES', 'REQUIERE INFO', 'NO APROBABLE'].map(f => (
+            <button
+              key={f}
+              onClick={() => setSelectedAIFilter(f)}
+              className={`px-4 py-1.5 text-sm font-medium rounded-full transition-colors ${selectedAIFilter === f ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+            >
+              {f === '' ? 'Todos' : f}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="premium-card p-0 overflow-hidden">
@@ -82,27 +100,62 @@ export const AuditorView = () => {
               <th className="p-4">Paciente</th>
               <th className="p-4">DNI</th>
               <th className="p-4">Estado</th>
+              <th className="p-4">Sugerencia IA</th>
               <th className="p-4 text-center">Acción</th>
             </tr>
           </thead>
           <tbody>
-            {patients.map(p => (
-              <tr key={p.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                <td className="p-4 font-medium">{p.name}</td>
-                <td className="p-4 text-text-muted">{p.dni}</td>
-                <td className="p-4">
-                  <span className="text-xs px-2 py-1 bg-gray-100 rounded-md font-semibold">{p.status}</span>
-                </td>
-                <td className="p-4 text-center">
-                  <button
-                    onClick={() => setSelectedPatientId(p.id)}
-                    className="text-primary hover:text-blue-700 p-2 rounded-lg hover:bg-blue-50 transition-colors"
-                  >
-                    <Eye size={18} />
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {patients.filter(p => {
+              if (!selectedAIFilter) return true;
+              const activeReview = p.auditReviews?.[0];
+              let verdict = '';
+              if (activeReview?.extractedData) {
+                try {
+                  verdict = JSON.parse(activeReview.extractedData).veredicto;
+                } catch(e){}
+              }
+              return verdict === selectedAIFilter;
+            }).map(p => {
+              const activeReview = p.auditReviews?.[0];
+              let verdict = '';
+              let badgeColor = "bg-gray-100 text-gray-800";
+              if (activeReview?.extractedData) {
+                try {
+                  verdict = JSON.parse(activeReview.extractedData).veredicto;
+                } catch(e){}
+              }
+              
+              if (verdict === 'APROBABLE') badgeColor = "bg-green-100 text-green-800 border-green-200";
+              else if (verdict === 'NO APROBABLE' || verdict === 'RECHAZADO') badgeColor = "bg-red-100 text-red-800 border-red-200";
+              else if (verdict === 'APROBABLE CON OBSERVACIONES' || verdict === 'REQUIERE INFO') badgeColor = "bg-yellow-100 text-yellow-800 border-yellow-200";
+
+              return (
+                <tr key={p.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                  <td className="p-4 font-medium">{p.name}</td>
+                  <td className="p-4 text-text-muted">{p.dni}</td>
+                  <td className="p-4">
+                    <span className="text-xs px-2 py-1 bg-gray-100 rounded-md font-semibold">{p.status}</span>
+                  </td>
+                  <td className="p-4">
+                    {verdict ? (
+                      <span className={`text-xs px-2 py-1 rounded-md font-semibold border ${badgeColor}`}>
+                        {verdict}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-gray-400 italic">-</span>
+                    )}
+                  </td>
+                  <td className="p-4 text-center">
+                    <button
+                      onClick={() => setSelectedPatientId(p.id)}
+                      className="text-primary hover:text-blue-700 p-2 rounded-lg hover:bg-blue-50 transition-colors"
+                    >
+                      <Eye size={18} />
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -169,14 +222,14 @@ export const AuditorView = () => {
                   const activeReview = patientDetail.auditReviews?.find((r: any) => !r.isArchived);
                   let data = null;
                   let verdictText = '';
-                  
+
                   if (activeReview?.extractedData) {
                     try {
                       data = JSON.parse(activeReview.extractedData);
                       verdictText = data.veredicto || '';
-                    } catch(e){}
+                    } catch (e) { }
                   }
-                  
+
                   let badgeColor = "bg-gray-100 text-gray-800";
                   if (verdictText === 'APROBABLE') badgeColor = "bg-green-100 text-green-800 border-green-200";
                   else if (verdictText === 'NO APROBABLE' || verdictText === 'RECHAZADO') badgeColor = "bg-red-100 text-red-800 border-red-200";
@@ -184,15 +237,20 @@ export const AuditorView = () => {
 
                   return (
                     <>
-                      <h3 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                        <CheckCircle2 className="text-green-500" size={18} /> Sugerencia IA (Agente)
-                        {verdictText && (
-                          <span className={`ml-auto px-2 py-0.5 rounded-full text-xs font-bold border ${badgeColor}`}>
-                            {verdictText}
-                          </span>
-                        )}
-                      </h3>
-                      
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="font-semibold text-gray-700 flex items-center gap-2">
+                          <CheckCircle2 className="text-green-500" size={18} /> Sugerencia IA (Agente)
+                          {verdictText && (
+                            <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-bold border ${badgeColor}`}>
+                              {verdictText}
+                            </span>
+                          )}
+                        </h3>
+                        <button onClick={() => setIsFullscreenAI(true)} className="p-1.5 text-gray-500 hover:text-primary hover:bg-blue-50 rounded-lg transition-colors" title="Ver en pantalla completa">
+                          <Maximize2 size={18} />
+                        </button>
+                      </div>
+
                       {data && (
                         <div className="mb-4 p-4 bg-blue-50 border border-blue-100 rounded-lg text-sm">
                           <h4 className="font-semibold text-blue-900 mb-2">Resumen Estructurado</h4>
@@ -221,20 +279,20 @@ export const AuditorView = () => {
                           <>
                             <ReactMarkdown
                               components={{
-                                h1: ({node, ...props}) => <h1 className="text-xl font-bold text-blue-900 mt-6 mb-3 pb-2 border-b border-blue-100 first:mt-0" {...props} />,
-                                h2: ({node, ...props}) => <h2 className="text-lg font-semibold text-blue-800 mt-5 mb-2 first:mt-0" {...props} />,
-                                h3: ({node, ...props}) => <h3 className="text-md font-semibold text-blue-700 mt-4 mb-2 first:mt-0" {...props} />,
-                                p: ({node, ...props}) => <p className="mb-3 leading-relaxed text-gray-700" {...props} />,
-                                ul: ({node, ...props}) => <ul className="mb-4 space-y-2 ml-1" {...props} />,
-                                ol: ({node, ...props}) => <ol className="list-decimal pl-5 mb-4 space-y-2" {...props} />,
-                                li: ({node, ...props}) => (
+                                h1: ({ node, ...props }) => <h1 className="text-xl font-bold text-blue-900 mt-6 mb-3 pb-2 border-b border-blue-100 first:mt-0" {...props} />,
+                                h2: ({ node, ...props }) => <h2 className="text-lg font-semibold text-blue-800 mt-5 mb-2 first:mt-0" {...props} />,
+                                h3: ({ node, ...props }) => <h3 className="text-md font-semibold text-blue-700 mt-4 mb-2 first:mt-0" {...props} />,
+                                p: ({ node, ...props }) => <p className="mb-3 leading-relaxed text-gray-700" {...props} />,
+                                ul: ({ node, ...props }) => <ul className="mb-4 space-y-2 ml-1" {...props} />,
+                                ol: ({ node, ...props }) => <ol className="list-decimal pl-5 mb-4 space-y-2" {...props} />,
+                                li: ({ node, ...props }) => (
                                   <li className="flex flex-wrap items-start">
                                     <span className="text-blue-500 mr-2 mt-0.5">•</span>
                                     <span className="flex-1 text-gray-700" {...props} />
                                   </li>
                                 ),
-                                strong: ({node, ...props}) => <strong className="font-semibold text-gray-900" {...props} />,
-                                em: ({node, ...props}) => <em className="italic text-gray-600" {...props} />,
+                                strong: ({ node, ...props }) => <strong className="font-semibold text-gray-900" {...props} />,
+                                em: ({ node, ...props }) => <em className="italic text-gray-600" {...props} />,
                               }}
                             >
                               {activeReview.aiSuggestion}
@@ -283,6 +341,64 @@ export const AuditorView = () => {
               </div>
             </div>
           </div>
+
+          {/* Fullscreen AI Suggestion Overlay */}
+          {isFullscreenAI && (() => {
+            const activeReview = patientDetail.auditReviews?.find((r: any) => !r.isArchived);
+            if (!activeReview?.aiSuggestion) return null;
+
+            let verdictText = '';
+            let badgeColor = "bg-gray-100 text-gray-800";
+            if (activeReview.extractedData) {
+              try {
+                const data = JSON.parse(activeReview.extractedData);
+                verdictText = data.veredicto;
+              } catch (e) { }
+            }
+            if (verdictText === 'APROBABLE') badgeColor = "bg-green-100 text-green-800 border-green-200";
+            else if (verdictText === 'NO APROBABLE' || verdictText === 'RECHAZADO') badgeColor = "bg-red-100 text-red-800 border-red-200";
+            else if (verdictText === 'APROBABLE CON OBSERVACIONES' || verdictText === 'REQUIERE INFO') badgeColor = "bg-yellow-100 text-yellow-800 border-yellow-200";
+
+            return (
+              <div className="fixed inset-0 bg-white z-60 flex flex-col animate-in fade-in zoom-in duration-200">
+                <div className="p-6 border-b flex justify-between items-center bg-gray-50 shadow-sm">
+                  <h2 className="text-xl font-bold flex items-center gap-2 text-blue-900">
+                    <CheckCircle2 className="text-green-500" size={24} /> Sugerencia IA (Agente) - {patientDetail.name}
+                    {verdictText && (
+                      <span className={`ml-4 px-3 py-1 rounded-full text-sm font-bold border ${badgeColor}`}>
+                        {verdictText}
+                      </span>
+                    )}
+                  </h2>
+                  <button onClick={() => setIsFullscreenAI(false)} className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-200 rounded-lg transition-colors" title="Salir de pantalla completa">
+                    <Minimize2 size={24} />
+                  </button>
+                </div>
+                <div className="flex-1 p-8 overflow-y-auto max-w-5xl mx-auto w-full text-base text-gray-800">
+                  <ReactMarkdown
+                    components={{
+                      h1: ({ node, ...props }) => <h1 className="text-2xl font-bold text-blue-900 mt-8 mb-4 pb-2 border-b border-blue-100 first:mt-0" {...props} />,
+                      h2: ({ node, ...props }) => <h2 className="text-xl font-semibold text-blue-800 mt-6 mb-3 first:mt-0" {...props} />,
+                      h3: ({ node, ...props }) => <h3 className="text-lg font-semibold text-blue-700 mt-5 mb-3 first:mt-0" {...props} />,
+                      p: ({ node, ...props }) => <p className="mb-4 leading-relaxed text-gray-700" {...props} />,
+                      ul: ({ node, ...props }) => <ul className="mb-5 space-y-2 ml-2" {...props} />,
+                      ol: ({ node, ...props }) => <ol className="list-decimal pl-6 mb-5 space-y-2" {...props} />,
+                      li: ({ node, ...props }) => (
+                        <li className="flex flex-wrap items-start">
+                          <span className="text-blue-500 mr-3 mt-1">•</span>
+                          <span className="flex-1 text-gray-700" {...props} />
+                        </li>
+                      ),
+                      strong: ({ node, ...props }) => <strong className="font-semibold text-gray-900" {...props} />,
+                      em: ({ node, ...props }) => <em className="italic text-gray-600" {...props} />,
+                    }}
+                  >
+                    {activeReview.aiSuggestion}
+                  </ReactMarkdown>
+                </div>
+              </div>
+            );
+          })()}
         </div>
       )}
     </div>

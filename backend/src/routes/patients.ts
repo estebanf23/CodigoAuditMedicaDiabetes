@@ -8,7 +8,14 @@ const prisma = new PrismaClient();
 router.get('/', async (req, res) => {
   const { status } = req.query;
   const patients = await prisma.patient.findMany({
-    ...(status ? { where: { status: String(status) } } : {})
+    ...(status ? { where: { status: String(status) } } : {}),
+    include: {
+      auditReviews: {
+        where: { isArchived: false },
+        orderBy: { reviewedAt: 'desc' },
+        take: 1
+      }
+    }
   });
   res.json(patients);
 });

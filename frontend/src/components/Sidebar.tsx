@@ -15,18 +15,44 @@ export const Sidebar = () => {
       </div>
 
       <div className="px-6 py-4 border-t border-b border-gray-100">
-        <label className="block text-sm font-medium text-text-muted mb-2">
+        <label className="block text-sm font-medium text-text-muted mb-3">
           Seleccionar Perfil
         </label>
-        <select
-          value={role}
-          onChange={(e) => setRole(e.target.value as any)}
-          className="w-full bg-background border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:outline-none transition-all"
-        >
-          <option value="paciente">Paciente</option>
-          <option value="medico">Médico</option>
-          <option value="auditor">Auditor</option>
-        </select>
+        <div className="flex flex-col gap-2">
+          <button
+            onClick={() => setRole('paciente')}
+            className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all ${
+              role === 'paciente'
+                ? 'bg-primary text-white shadow-md'
+                : 'bg-background border border-gray-200 text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <UserRound size={18} />
+            <span>Paciente</span>
+          </button>
+          <button
+            onClick={() => setRole('medico')}
+            className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all ${
+              role === 'medico'
+                ? 'bg-primary text-white shadow-md'
+                : 'bg-background border border-gray-200 text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <Stethoscope size={18} />
+            <span>Médico</span>
+          </button>
+          <button
+            onClick={() => setRole('auditor')}
+            className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all ${
+              role === 'auditor'
+                ? 'bg-primary text-white shadow-md'
+                : 'bg-background border border-gray-200 text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <ShieldCheck size={18} />
+            <span>Auditor</span>
+          </button>
+        </div>
       </div>
 
       <nav className="flex-1 p-4 space-y-1">

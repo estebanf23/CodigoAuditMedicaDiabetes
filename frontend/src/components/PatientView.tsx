@@ -16,7 +16,10 @@ export const PatientView = () => {
   const [patientDetail, setPatientDetail] = useState<any>(null);
 
   const loadPatientDetails = async () => {
+    setFeedback(null);
     if (selectedPatientId) {
+      setPatientDetail(null);
+      setPatientDocuments([]);
       try {
         const details = await getPatientDetail(selectedPatientId);
         setPatientDetail(details);
