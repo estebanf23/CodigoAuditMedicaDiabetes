@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: 'auditoriasaludbackend-dpcxb6c2h3bwesgv.centralus-01.azurewebsites.net',
 });
 
 export const getPatients = async (status?: string) => {

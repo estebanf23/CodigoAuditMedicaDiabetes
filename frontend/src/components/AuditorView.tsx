@@ -187,7 +187,7 @@ export const AuditorView = () => {
                           <p className="text-xs font-semibold text-blue-600 mt-1">Confiabilidad: {((d.reliabilityScore || 0) * 100).toFixed(1)}%</p>
                         </div>
                       </div>
-                      <a href={`http://localhost:5000/${d.filePath.replace(/\\/g, '/')}`} target="_blank" rel="noopener noreferrer" className="p-2 text-primary hover:bg-blue-50 rounded-lg transition-colors" title="Abrir Documento">
+                      <a href={`auditoriasaludbackend-dpcxb6c2h3bwesgv.centralus-01.azurewebsites.net`} target="_blank" rel="noopener noreferrer" className="p-2 text-primary hover:bg-blue-50 rounded-lg transition-colors" title="Abrir Documento">
                         <Eye size={18} />
                       </a>
                     </div>
@@ -207,7 +207,7 @@ export const AuditorView = () => {
                             <FileText className="text-gray-400" size={16} />
                             <p className="font-medium text-xs text-gray-600">{d.filename}</p>
                           </div>
-                          <a href={`http://localhost:5000/${d.filePath.replace(/\\/g, '/')}`} target="_blank" rel="noopener noreferrer" className="p-1 text-primary hover:bg-blue-50 rounded-lg transition-colors" title="Abrir Documento">
+                          <a href={`auditoriasaludbackend-dpcxb6c2h3bwesgv.centralus-01.azurewebsites.net`} target="_blank" rel="noopener noreferrer" className="p-1 text-primary hover:bg-blue-50 rounded-lg transition-colors" title="Abrir Documento">
                             <Eye size={16} />
                           </a>
                         </div>

@@ -77,7 +77,7 @@ export const DoctorView = () => {
                       <p className="text-xs text-text-muted">Tipo: {doc.docType || 'Desconocido'}</p>
                     </div>
                     <span className="text-xs px-2 py-1 bg-gray-100 rounded">{doc.status}</span>
-                    <a href={`http://localhost:5000/${doc.filePath.replace(/\\/g, '/')}`} target="_blank" rel="noopener noreferrer" className="ml-2 p-2 text-primary hover:bg-blue-50 rounded-lg transition-colors" title="Abrir Documento">
+                    <a href={`auditoriasaludbackend-dpcxb6c2h3bwesgv.centralus-01.azurewebsites.net`} target="_blank" rel="noopener noreferrer" className="ml-2 p-2 text-primary hover:bg-blue-50 rounded-lg transition-colors" title="Abrir Documento">
                       <Eye size={18} />
                     </a>
                   </div>
