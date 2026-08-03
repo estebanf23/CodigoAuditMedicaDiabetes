@@ -42,9 +42,32 @@ jobs:
         working-directory: frontend
         run: npm run build
 
-      - name: Deploy to Azure Web App
+      - name: Validate Azure credentials
+        if: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE == '' && secrets.AZURE_CREDENTIALS == '' }}
+        run: |
+          echo "Missing deployment credentials."
+          echo "Set one of these repository secrets:"
+          echo "- AZURE_WEBAPP_PUBLISH_PROFILE (recommended)"
+          echo "- AZURE_CREDENTIALS (JSON from Azure service principal)"
+          exit 1
+
+      - name: Azure Login (fallback)
+        if: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE == '' && secrets.AZURE_CREDENTIALS != '' }}
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy with Publish Profile
+        if: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE != '' }}
         uses: azure/webapps-deploy@v3
         with:
           app-name: auditoriasalud-btdnf6gjgkfndsa9
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: frontend/dist
+
+      - name: Deploy with Azure Login
+        if: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE == '' && secrets.AZURE_CREDENTIALS != '' }}
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: auditoriasalud-btdnf6gjgkfndsa9
           package: frontend/dist
