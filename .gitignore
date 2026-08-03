@@ -7,3 +7,6 @@
 
 # Frida specifications folder
 .frida-specs/**
+
+# Azure publish profiles (contain deployment credentials)
+*.PublishSettings
