@@ -45,6 +45,6 @@ jobs:
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: auditoriasalud
+          app-name: auditoriasalud-btdnf6gjgkfndsa9
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_FRONT }}
           package: frontend/dist

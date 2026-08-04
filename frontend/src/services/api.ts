@@ -1,7 +1,11 @@
 import axios from 'axios';
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ??
+  'https://auditoriasaludbackend-dpcxb6c2h3bwesgv.centralus-01.azurewebsites.net/api';
+
 const api = axios.create({
-  baseURL: 'auditoriasaludbackend-dpcxb6c2h3bwesgv.centralus-01.azurewebsites.net',
+  baseURL: API_BASE_URL,
 });
 
 export const getPatients = async (status?: string) => {
